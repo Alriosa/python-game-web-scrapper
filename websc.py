@@ -60,7 +60,8 @@ url_pagina = "https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/"  #
 palabras_filtro = ["japan", "europa", "eur", "jap", "(japan)", "(Japan)", "(JAPAN)", "(Europa)", "germany", "Germany",
                    "Germany", "France", "FRANCE", "france", "Italy", "ITALY", "(Netherlands)", "netherlands", "Korea",
                    "Scandinavia", "Australia", "(Australia)", "(Sweden)", "(Norway)", "(Denmark)", "(Russia)", "Russia",
-                   "(China)", "china", "China", "Taiwan", "taiwan", "(Taiwan)"]  # Palabras filtro
+                   "(China)", "china", "China", "Taiwan", "taiwan", "(Taiwan)", "portugal", "portuguese", "brazil",
+                   "brasil", "fifa", "wwf", "football", "futbol", "volleyball","Tenis","(asia)","(Asia)","asia","NFL"]  # Palabras filtro
 limite_descargas = 5  # Límite de descargas simultáneas
 descargar_links = False  # Indicador para descargar los enlaces (False para solo analizar)
 analizar_pagina(url_pagina, palabras_filtro, limite_descargas, descargar_links)
