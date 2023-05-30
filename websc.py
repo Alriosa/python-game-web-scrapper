@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from datetime import datetime
 import os
 
+
 def descargar_archivo(url):
     nombre_archivo = url.split("/")[-1]  # Obtener el nombre del archivo de la URL
     ruta_destino = r"E:\Emulator\4-Downloads\PS1" + "\\" + nombre_archivo
@@ -58,21 +59,10 @@ def guardar_registro(enlaces_descargados):
     sys.stdout.flush()
 
 
-def verificar_archivo_existente(url):
-    nombre_archivo = url.split("/")[-1]
-    ruta_archivo = os.path.join(r"E:\Emulator\4-Downloads\PS1", nombre_archivo)
-    if os.path.isfile(ruta_archivo):
-        sys.stdout.write(f"El archivo {nombre_archivo} ya existe en la carpeta de descargas.\n")
-        sys.stdout.flush()
-        return True
-    else:
-        with open(ruta_archivo, "r") as archivo_registro:
-            enlaces_descargados = archivo_registro.read().splitlines()
-            if url in enlaces_descargados:
-                sys.stdout.write(f"El enlace {url} ya ha sido descargado previamente.\n")
-                sys.stdout.flush()
-                return True
-    return False
+def verificar_archivo_existente(nombre_archivo):
+    ruta_destino = r"E:\Emulator\4-Downloads\PS1"
+    archivos_descargados = os.listdir(ruta_destino)
+    return nombre_archivo in archivos_descargados
 
 
 def analizar_pagina(url, palabras_filtro, limite_descargas, descargar_links):
@@ -91,18 +81,28 @@ def analizar_pagina(url, palabras_filtro, limite_descargas, descargar_links):
             contador_descargas_posibles += 1
             if any(palabra.lower() in href.lower() for palabra in palabras_filtro):
                 continue
-            enlace_descarga = urljoin(url, href)
-            if verificar_archivo_existente(enlace_descarga):
-                continue
-            enlaces_atrapados.append(enlace_descarga)
+            enlaces_atrapados.append(urljoin(url, href))
             if descargar_links:
                 if not descargas_realizadas < limite_descargas:
                     break
-                sys.stdout.write(f"Procesando enlace: {enlace_descarga}\n")
+
+                url_descarga = urljoin(url, href)
+                nombre_archivo_descarga = href.split("/")[-1]
+                if verificar_archivo_existente(nombre_archivo_descarga):
+                    enlaces_descargados.append(url_descarga)
+                    guardar_registro(enlaces_descargados)
+                    continue
+
+                if url_descarga in enlaces_descargados:
+                    sys.stdout.write(f"El archivo {href} ya ha sido descargado previamente.\n")
+                    sys.stdout.flush()
+                    continue
+
+                sys.stdout.write(f"Procesando enlace: {url_descarga}\n")
                 sys.stdout.flush()
-                descargar_archivo(enlace_descarga)
+                descargar_archivo(url_descarga)
                 descargas_realizadas += 1
-                enlaces_descargados.append(enlace_descarga)
+                enlaces_descargados.append(url_descarga)
 
     guardar_registro(enlaces_descargados)
 
@@ -115,13 +115,19 @@ def analizar_pagina(url, palabras_filtro, limite_descargas, descargar_links):
 
 
 # Ejemplo de uso
-url_pagina = "https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/"  # Reemplaza con la URL de la página que deseas analizar
-palabras_filtro = ["japan", "europa", "eur", "jap", "(japan)", "(Japan)", "(JAPAN)", "(Europa)", "germany", "Germany",
-                   "Germany", "France", "FRANCE", "france", "Italy", "ITALY", "(Netherlands)", "netherlands", "Korea",
-                   "Scandinavia", "Australia", "(Australia)", "(Sweden)", "(Norway)", "(Denmark)", "(Russia)", "Russia",
-                   "(China)", "china", "China", "Taiwan", "taiwan", "(Taiwan)", "portugal", "portuguese", "brazil",
-                   "brasil", "fifa", "wwf", "football", "futbol", "volleyball", "Tenis", "(asia)", "(Asia)", "asia",
-                   "NFL"]
-limite_descargas = 10777  # Límite de descargas simultáneas
-descargar_links = True  # Indicador para descargar los enlaces (False para solo analizar)
+url_pagina = "https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/"
+palabras_filtro = [
+    "japan", "europa", "eur", "jap", "(japan)", "(Japan)", "(JAPAN)", "(Europa)", "germany", "Germany",
+    "Germany", "France", "FRANCE", "france", "Italy", "ITALY", "(Netherlands)", "netherlands", "Korea",
+    "Scandinavia", "Australia", "(Australia)", "(Sweden)", "(Norway)", "(Denmark)", "(Russia)", "Russia",
+    "(China)", "china", "China", "Taiwan", "taiwan", "(Taiwan)", "portugal", "portuguese", "brazil",
+    "brasil", "fifa", "wwf", "football", "futbol", "volleyball", "Tenis", "(asia)", "(Asia)", "asia",
+    "NFL", "MLB", "NBA", "NHL", "FIFA", "UEFA", "Olympics", "soccer", "baseball", "basketball", "hockey",
+    "golf", "tennis", "boxing", "rugby", "cricket", "surfing", "swimming", "running", "wrestling",
+    "bowling", "snooker", "table tennis", "badminton", "billiards", "equestrian", "gymnastics",
+    "handball", "lacrosse", "motorsport", "rowing", "sailing", "softball", "squash", "track and field",
+    "water polo", "weightlifting", "yoga", "PGA Tour", "PGA", "Tiger Woods"
+]
+limite_descargas = 10777
+descargar_links = True
 analizar_pagina(url_pagina, palabras_filtro, limite_descargas, descargar_links)
