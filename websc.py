@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from datetime import datetime
-
+import os
 
 def descargar_archivo(url):
     nombre_archivo = url.split("/")[-1]  # Obtener el nombre del archivo de la URL
@@ -58,6 +58,23 @@ def guardar_registro(enlaces_descargados):
     sys.stdout.flush()
 
 
+def verificar_archivo_existente(url):
+    nombre_archivo = url.split("/")[-1]
+    ruta_archivo = os.path.join(r"E:\Emulator\4-Downloads\PS1", nombre_archivo)
+    if os.path.isfile(ruta_archivo):
+        sys.stdout.write(f"El archivo {nombre_archivo} ya existe en la carpeta de descargas.\n")
+        sys.stdout.flush()
+        return True
+    else:
+        with open(ruta_archivo, "r") as archivo_registro:
+            enlaces_descargados = archivo_registro.read().splitlines()
+            if url in enlaces_descargados:
+                sys.stdout.write(f"El enlace {url} ya ha sido descargado previamente.\n")
+                sys.stdout.flush()
+                return True
+    return False
+
+
 def analizar_pagina(url, palabras_filtro, limite_descargas, descargar_links):
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
@@ -72,23 +89,20 @@ def analizar_pagina(url, palabras_filtro, limite_descargas, descargar_links):
         href = enlace.get("href")
         if href and (href.endswith(".zip") or href.endswith(".rar") or href.endswith(".7z")):
             contador_descargas_posibles += 1
-            if any(palabra.lower() in href.lower() for palabra in
-                   palabras_filtro):  # Verificar si el enlace contiene alguna palabra filtro
+            if any(palabra.lower() in href.lower() for palabra in palabras_filtro):
                 continue
-            enlaces_atrapados.append(urljoin(url, href))
-            if descargar_links:  # Verificar si se deben descargar los enlaces
-                if not descargas_realizadas < limite_descargas:  # Verificar si se ha alcanzado el límite de descargas
+            enlace_descarga = urljoin(url, href)
+            if verificar_archivo_existente(enlace_descarga):
+                continue
+            enlaces_atrapados.append(enlace_descarga)
+            if descargar_links:
+                if not descargas_realizadas < limite_descargas:
                     break
-                if urljoin(url, href) in enlaces_descargados:  # Verificar si el enlace ya ha sido descargado
-                    sys.stdout.write(f"El archivo {href} ya ha sido descargado previamente.\n")
-                    sys.stdout.flush()
-                    continue
-                url_descarga = urljoin(url, href)
-                sys.stdout.write(f"Procesando enlace: {url_descarga}\n")
+                sys.stdout.write(f"Procesando enlace: {enlace_descarga}\n")
                 sys.stdout.flush()
-                descargar_archivo(url_descarga)
+                descargar_archivo(enlace_descarga)
                 descargas_realizadas += 1
-                enlaces_descargados.append(urljoin(url, href))
+                enlaces_descargados.append(enlace_descarga)
 
     guardar_registro(enlaces_descargados)
 
@@ -108,6 +122,6 @@ palabras_filtro = ["japan", "europa", "eur", "jap", "(japan)", "(Japan)", "(JAPA
                    "(China)", "china", "China", "Taiwan", "taiwan", "(Taiwan)", "portugal", "portuguese", "brazil",
                    "brasil", "fifa", "wwf", "football", "futbol", "volleyball", "Tenis", "(asia)", "(Asia)", "asia",
                    "NFL"]
-limite_descargas = 5  # Límite de descargas simultáneas
-descargar_links = False  # Indicador para descargar los enlaces (False para solo analizar)
+limite_descargas = 10777  # Límite de descargas simultáneas
+descargar_links = True  # Indicador para descargar los enlaces (False para solo analizar)
 analizar_pagina(url_pagina, palabras_filtro, limite_descargas, descargar_links)
